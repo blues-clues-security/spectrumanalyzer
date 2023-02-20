@@ -14,9 +14,6 @@ min_amplitude = 0
 max_amplitude = 1000
 num_bands = 100
 
-# Multiply number of selected bands by 3 to account for peak and 2 troughs
-#num_bands = num_bands * 30
-
 # Create a list to store the visible bands and the amplitudes of each band
 visible_bands = [200, 450, 550, 800]
 noise_floor = [200]
