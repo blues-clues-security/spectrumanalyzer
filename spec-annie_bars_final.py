@@ -19,7 +19,8 @@ num_bands = num_bands * 10
 
 # Create a list to store the visible bands and the amplitudes of each band
 visible_bands = [200, 450, 550, 850]
-amplitudes = [50] * (num_bands + len(visible_bands))
+noise_floor = [200]
+amplitudes = noise_floor * (num_bands + len(visible_bands))
 
 # Create the main window
 root = tk.Tk()
@@ -78,8 +79,6 @@ canvas.get_tk_widget().pack()
 
 # Initiate line based on the frequencies specified
 # Note: amplitude/y values is set to noise_floor initially
-noise_floor = [40]
-
 # Create a range of frequencies
 frequencies = np.linspace(min_frequency, max_frequency, num_bands).astype(int)
 
@@ -153,7 +152,6 @@ def update_label():
         bar_plot[selected_band].set_color('green')
     else:
         bar_plot[selected_band].set_color('red')
-    ani
     # Schedule the next update in 500 milliseconds
     root.after(500, update_label)
     

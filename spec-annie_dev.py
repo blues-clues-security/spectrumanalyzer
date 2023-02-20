@@ -78,7 +78,7 @@ canvas.get_tk_widget().pack()
 
 # Initiate line based on the frequencies specified
 # Note: amplitude/y values is set to noise_floor initially
-noise_floor = [40]
+noise_floor = [200]
 
 # Create a range of frequencies
 frequencies = np.linspace(min_frequency, max_frequency, num_bands).astype(int)
@@ -109,7 +109,7 @@ label.pack()
 ax.set_xticks(visible_bands)
 #ax.setxticklabels(['{:.0f}'.format(f) for f in frequencies])
 
-#
+# Create a wiggle to appear more realistic
 def wiggle(frame):
     for i, rect in enumerate(bar_plot):
         try:
@@ -153,7 +153,6 @@ def update_label():
         bar_plot[selected_band].set_color('green')
     else:
         bar_plot[selected_band].set_color('red')
-    ani
     # Schedule the next update in 500 milliseconds
     root.after(500, update_label)
     
