@@ -19,7 +19,66 @@ amplitudes = noise_floor * (num_bands + len(visible_bands))
 
 
 class SpectrumAnalyzer:
+    """
+    A class representing a spectrum analyzer.
+
+    ...
+
+    Attributes
+    ----------
+    min_frequency : int
+        minimum frequency in the range of frequencies to be plotted
+    max_frequency : int
+        maximum frequency in the range of frequencies to be plotted
+    min_amplitude : int
+        minimum amplitude in the range of amplitudes to be plotted
+    max_amplitude : int
+        maximum amplitude in the range of amplitudes to be plotted
+    num_bands : int
+        number of frequency bands to be plotted
+    visible_bands : list of int
+        list of frequencies for the visible bands
+    noise_floor : list of int
+        amplitude of the noise floor
+    amplitudes : list of int
+        amplitudes of each band to be plotted
+
+    Methods
+    -------
+    select_band(selected_band):
+        Sets the currently selected band to the given frequency.
+
+    create_options_window():
+        Creates the options window.
+
+    create_bar_plot_frame():
+        Creates the frame for the spectrum analyzer plot.
+
+    create_control_frame():
+        Creates the frame for the control buttons and sliders.
+
+    set_amplitude(amplitude):
+        Sets the amplitude of the currently selected band.
+
+    wiggle(frame):
+        Creates a wiggle effect to give a noisy feel to the plot.
+
+    update(frame):
+        Updates the amplitude of each bar in the plot.
+
+    update_label():
+        Updates the label displaying the selected band and its amplitude.
+
+    create_animation():
+        Creates the animation using the update function and a frame rate of 60 FPS.
+    """
     def __init__(self):
+        """
+        Constructs all the necessary attributes for the SpectrumAnalyzer object.
+
+        Initializes the window for the options, the frame for the spectrum analyzer plot,
+        the list of frequencies to be plotted, the selected band, and the animation.
+        """
         self.min_frequency = 0
         self.max_frequency = 1000
         self.min_amplitude = 0
@@ -28,49 +87,40 @@ class SpectrumAnalyzer:
         self.visible_bands = [200, 450, 550, 800]
         self.noise_floor = [200]
         self.amplitudes = noise_floor * (num_bands + len(visible_bands))
-        
         self.create_options_window()
-        self.control_frame = tk.Frame(self.options)
-        self.control_frame.pack()
         self.create_control_frame()
-        
-
-        self.amplitude_slider = tk.Scale(self.control_frame, from_=0, to=1000, orient=tk.HORIZONTAL, resolution=1, command=self.set_amplitude)
-        self.amplitude_text = tk.Entry(self.control_frame)
-        self.amplitude_slider.pack()
-        self.amplitude_text.pack()
-        self.label = tk.Label(self.options)
-        self.label.pack()
-
-
-        self.root = tk.Tk()
-        
-        self.create_plot_frame()
-        self.create_bar_plot()
-        
-        self.selected_band = np.where(frequencies == visible_bands[0])[0][0]
+        self.create_bar_plot_frame()
         self.create_animation()
-        # self.select_band()
-        # self.wiggle()
-        # self.update()
         self.update_label()
 
     def select_band(self, selected_band):
+        """
+        Sets the currently selected band to the given frequency.
+
+        Parameters
+        ----------
+        selected_band : int
+            the frequency of the selected band
+        """
         self.selected_band = np.where(self.frequencies == selected_band)[0][0]
 
     def create_options_window(self):
+        """
+        Creates the options window.
+        """
         self.options = tk.Tk()
         self.options.geometry('300x250')
         self.options.winfo_toplevel().title('Options')
 
-    def create_plot_frame(self):
+    def create_bar_plot_frame(self):
+        """
+        Creates the frame for the spectrum analyzer plot.
+        """
+        self.root = tk.Tk()
         self.plot_frame = tk.Frame(self.root)
         self.plot_frame.winfo_toplevel().title('Spectrum Analyzer')
         self.plot_frame.pack()
-
-    def create_bar_plot(self):
-        global frequencies
-        frequencies = np.arange(min_frequency, max_frequency, (max_frequency - min_frequency) // (num_bands))
+        self.frequencies = np.arange(self.min_frequency, self.max_frequency, (self.max_frequency - self.min_frequency) // (self.num_bands))
         try:
             for i in visible_bands:
                 i // 10
@@ -85,8 +135,7 @@ class SpectrumAnalyzer:
         self.ax.spines['left'].set_visible(False)
         
         # Create the bar plot
-        self.frequencies = np.arange(self.min_frequency, self.max_frequency, (self.max_frequency - self.min_frequency) // (self.num_bands))
-        self.bar_plot = self.ax.bar(frequencies, self.noise_floor * (self.num_bands), color='red', width=[5] * (self.num_bands))
+        self.bar_plot = self.ax.bar(self.frequencies, self.noise_floor * (self.num_bands), color='red', width=[5] * (self.num_bands))
 
         # Set the x/y axis limits
         plt.ylim((0,1000))
@@ -101,22 +150,31 @@ class SpectrumAnalyzer:
         self.ax.set_xticks(self.visible_bands)
         
         # Create the FigureCanvasTkAgg widget and add it to the plot frame
+        self.selected_band = np.where(self.frequencies == self.visible_bands[0])[0][0]
         self.canvas = FigureCanvasTkAgg(self.fig, self.plot_frame)
         self.canvas.get_tk_widget().pack()
 
     def create_control_frame(self):
+        self.control_frame = tk.Frame(self.options)
+        self.control_frame.pack()
         band_buttons = []
         for i, visible_band in enumerate(visible_bands):
             band_button = tk.Button(self.control_frame, text=f'Select Band {i+1}', command=lambda visible_band=visible_band: self.select_band(visible_band))
             band_buttons.append(band_button)
         for band_button in band_buttons:
             band_button.pack()
+        self.amplitude_slider = tk.Scale(self.control_frame, from_=0, to=1000, orient=tk.HORIZONTAL, resolution=1, command=self.set_amplitude)
+        self.amplitude_text = tk.Entry(self.control_frame)
+        self.amplitude_slider.pack()
+        self.amplitude_text.pack()
+        self.label = tk.Label(self.options)
+        self.label.pack()
     
     def set_amplitude(self, amplitude):
         try:
             self.amplitudes[self.selected_band] = int(amplitude)
         except TypeError:
-            amplitudes[self.selected_band] = 0
+            self.amplitudes[self.selected_band] = 0
 
         
     # Create a wiggle effect to give a noisy feel
@@ -135,7 +193,7 @@ class SpectrumAnalyzer:
     def update(self, frame):
         for i, rect in enumerate(self.bar_plot):
             try:
-                rect.set_height(int(amplitudes[i]))
+                rect.set_height(int(self.amplitudes[i]))
             except IndexError:
                 print(i)
                 pass
@@ -147,11 +205,11 @@ class SpectrumAnalyzer:
         #frequency = frequencies[selected_band]
         if self.amplitude_text.get():
             amplitude = int(self.amplitude_text.get())
-            amplitudes[self.selected_band] = amplitude
+            self.amplitudes[self.selected_band] = amplitude
         else:
-            amplitude = amplitudes[self.selected_band]
+            amplitude = self.amplitudes[self.selected_band]
         # Update the label with the selected band and frequency
-        self.label.configure(text=f'Selected Band\nFrequency: {frequencies[self.selected_band]} Hz\nAmplitude: {amplitudes[self.selected_band]}')
+        self.label.configure(text=f'Selected Band\nFrequency: {self.frequencies[self.selected_band]} Hz\nAmplitude: {self.amplitudes[self.selected_band]}')
 
         # Update the color of the bar based on the amplitude
         if amplitude >= 500:
@@ -166,11 +224,11 @@ class SpectrumAnalyzer:
         for i in band_list:
             adjacent_bands = [self.selected_band-i, self.selected_band+i]
             for band in adjacent_bands:
-                if 0 <= band < len(amplitudes):
-                    if amplitudes[self.selected_band] * band_variance[i] >= noise_floor[0]:
-                        amplitudes[band] = amplitudes[self.selected_band] * band_variance[i]
-                if amplitudes[self.selected_band] <= noise_floor[0]:
-                    amplitudes[band] = noise_floor[0]
+                if 0 <= band < len(self.amplitudes):
+                    if self.amplitudes[self.selected_band] * band_variance[i] >= noise_floor[0]:
+                        self.amplitudes[band] = self.amplitudes[self.selected_band] * band_variance[i]
+                if self.amplitudes[self.selected_band] <= noise_floor[0]:
+                    self.amplitudes[band] = noise_floor[0]
         self.root.after(500, self.update_label)
     
     def create_animation(self):
