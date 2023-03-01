@@ -15,7 +15,7 @@ The following libraries are required to run this program:
 To get started with this program, simply clone this repository to your local machine. You can do this by running the following command:
 
 ```bash
-git clone https://github.com/Bl00dvault/spectrum-analyzer.git
+git clone https://github.com/Bl00dvault/spectrumanalyzer.git
 ```
 Once you have cloned the repository, you can navigate to the directory where it is located and run the script spectrum_analyzer.py to start the program.
 
