@@ -100,10 +100,10 @@ create_animation():
 ## Constructor & Destructor Documentation
 ```
 __init__()
-def spectrum_analyzer.SpectrumAnalyzer.__init__	(	 	self	)	
+def spectrum_analyzer.SpectrumAnalyzer.__init__	(self)	
 Constructs all the necessary attributes for the SpectrumAnalyzer object.
 
-Initializes the window for the options, the frame for the spectrum analyzer plot,
+    Initializes the window for the options, the frame for the spectrum analyzer plot,
 the list of frequencies to be plotted, the selected band, and the animation.
 ```
 
@@ -111,24 +111,24 @@ the list of frequencies to be plotted, the selected band, and the animation.
 ```
 create_animation()
 def spectrum_analyzer.SpectrumAnalyzer.create_animation(self)	
-Creates the animation using the update function and a frame rate of 60 FPS.
+    Creates the animation using the update function and a frame rate of 60 FPS.
 
 create_bar_plot_frame()
 def spectrum_analyzer.SpectrumAnalyzer.create_bar_plot_frame(self)	
-Creates the frame for the spectrum analyzer plot.
+    Creates the frame for the spectrum analyzer plot.
 
 create_control_frame()
 def spectrum_analyzer.SpectrumAnalyzer.create_control_frame(self)	
-Creates the frame for the control buttons and sliders.
+    Creates the frame for the control buttons and sliders.
 
 create_options_window()
 def spectrum_analyzer.SpectrumAnalyzer.create_options_window(self)	
-Creates the options window.
+    Creates the options window.
 
 select_band()
 def spectrum_analyzer.SpectrumAnalyzer.select_band(
     self,
- 	selected_band 
+    selected_band 
 )		
 Sets the currently selected band to the given frequency.
 ```
@@ -139,10 +139,11 @@ selected_band : int
     the frequency of the selected band
 
 set_amplitude()
-def spectrum_analyzer.SpectrumAnalyzer.set_amplitude	(	 	self,
- 	amplitude 
+def spectrum_analyzer.SpectrumAnalyzer.set_amplitude(
+    self,
+    amplitude 
 )		
-Sets the amplitude of the currently selected band.
+    Sets the amplitude of the currently selected band.
 
 amplitude : int
     The amplitude of the currently selected band.
@@ -150,23 +151,23 @@ amplitude : int
 update()
 def spectrum_analyzer.SpectrumAnalyzer.update(
     self,
- 	frame 
+    frame 
 )		
-Updates the amplitude of each bar in the plot.
+    Updates the amplitude of each bar in the plot.
 
 frame : int
     the current frame of the animation
 
 update_label()
 def spectrum_analyzer.SpectrumAnalyzer.update_label(self)	
-Updates the label displaying the selected band and its amplitude.
+    Updates the label displaying the selected band and its amplitude.
 
 wiggle()
 def spectrum_analyzer.SpectrumAnalyzer.wiggle(
     self,
- 	frame 
+    frame 
 )		
-Creates a wiggle effect to give a noisy feel to the plot.
+    Creates a wiggle effect to give a noisy feel to the plot.
 
 frame : int
     The current frame of the animation.
