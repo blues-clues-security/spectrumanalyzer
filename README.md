@@ -4,6 +4,9 @@ This program is a simple spectrum analyzer that displays a bar graph of the ampl
 ## Usage
 To use the program, simply run the script spectrum_analyzer.py. A window will appear showing a bar graph of the amplitude of different frequency bands. You can adjust the amplitude of any of the visible bands by selecting it and moving the corresponding slider in the "Options" window. You can select one of the four visible bands using the corresponding button.
 
+
+Detailed code documentation can be found at [here](doc/html/output.md) or by viewing [Doxygen Web Pages](doc/html/index.html)
+
 ## Dependencies
 The following libraries are required to run this program:
 
