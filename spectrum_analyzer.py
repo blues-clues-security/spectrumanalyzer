@@ -66,13 +66,7 @@ class SpectrumAnalyzer:
         Initializes the window for the options, the frame for the spectrum analyzer plot,
         the list of frequencies to be plotted, the selected band, and the animation.
         """
-        self.min_frequency = 0
-        self.max_frequency = 1000
-        self.min_amplitude = 0
-        self.max_amplitude = 1000
-        self.num_bands = 100
-        self.visible_bands = [200, 450, 550, 800]
-        self.noise_floor = [200]
+        self.create_initial_options_windows()
         self.amplitudes = self.noise_floor * (self.num_bands + len(self.visible_bands))
         self.create_options_window()
         self.create_control_frame()
@@ -90,6 +84,108 @@ class SpectrumAnalyzer:
             the frequency of the selected band
         """
         self.selected_band = np.where(self.frequencies == selected_band)[0][0]
+    
+    def create_initial_options_windows(self):
+        """
+        Creates the initial options window for the Spectrum Analyzer.
+        """
+        # Create initial options window
+        self.init_options = tk.Tk()
+        self.init_options.geometry('520x400')
+        self.init_options.winfo_toplevel().title('Initial Options')
+
+         # Create two frames to hold the options
+        left_frame = tk.Frame(self.init_options)
+        right_frame = tk.Frame(self.init_options)
+        left_frame.pack(side=tk.LEFT, padx=10)
+        right_frame.pack(side=tk.LEFT, padx=20)
+        
+        # Set starting variables to entry fields
+        self.min_frequency = tk.Entry(left_frame)
+        self.min_frequency.insert(0, '0')
+        self.minfreq_label = tk.Label(left_frame, text="Enter minimum frequency\n(Default: 0)")
+        self.max_frequency = tk.Entry(left_frame)
+        self.max_frequency.insert(0, '1000')
+        self.maxfreq_label = tk.Label(left_frame, text="Enter maximum frequency\n(Default: 1000)")
+        self.min_amplitude = tk.Entry(left_frame)
+        self.min_amplitude.insert(0, '0')
+        self.minamp_label = tk.Label(left_frame, text="Enter minimum amplitude\n(Default: 0)")
+        self.max_amplitude = tk.Entry(left_frame)
+        self.max_amplitude.insert(0, '1000')
+        self.maxamp_label = tk.Label(left_frame, text="Enter maximum amplitude\n(Default: 1000)")
+        self.num_bands = tk.Entry(right_frame)
+        self.num_bands.insert(0, '100')
+        self.numbands_label = tk.Label(right_frame, text="Enter number of bars to display\n(For best results: 100)")
+        self.visible_bands = tk.Entry(right_frame)
+        self.visible_bands.insert(0, '200,400,550,800')
+        self.visbands_label = tk.Label(right_frame, text="Enter the monitor frequencies\n(Example: 200,400,550,800)")
+        self.noise_floor = tk.Entry(right_frame)
+        self.noise_floor.insert(0, '200')
+        self.noisefloor_label = tk.Label(right_frame, text="Enter the amplitude of the noise floor")
+        self.transmit_strength = tk.Entry(right_frame)
+        self.transtr_label = tk.Label(right_frame, text="Enter the transmit signal strength\n(when the bar should turn green)")
+        
+        # Build lists to display all buttons
+        self.init_optionslabels = [
+            self.minfreq_label,
+            self.maxfreq_label,
+            self.minamp_label,
+            self.maxamp_label,
+            self.numbands_label,
+            self.visbands_label,
+            self.noisefloor_label,
+            self.transtr_label
+        ]
+        self.init_optionsbuttons = [
+            self.min_frequency,
+            self.max_frequency,
+            self.min_amplitude,
+            self.max_amplitude,
+            self.num_bands,
+            self.visible_bands,
+            self.noise_floor,
+            self.transmit_strength
+        ]
+        # Display the created entry buttons on the initial options window
+        for i, button in enumerate(self.init_optionsbuttons):
+            self.init_optionslabels[i].pack()
+            self.init_optionsbuttons[i].pack(side=tk.TOP, pady=5)
+
+        # Create the submit button, focus the window and wait until the submit button has been pressed to continue execution
+        self.submit_button = tk.Button(self.init_options, text="Submit", command=self.submit_init_options)
+        self.submit_button.pack(side="right", pady=20, padx=25)
+        self.init_options.grab_set()
+        self.init_options.focus_set()
+        self.init_options.wait_window()
+
+    def submit_init_options(self):
+        """
+        Gets the input values from the initial options window and saves them as instance variables.
+        """
+        try:
+            self.noise_floor = self.noise_floor.get()
+            self.noise_floor = [int(self.noise_floor)]
+            self.min_frequency = self.min_frequency.get()
+            self.min_frequency = int(self.min_frequency)
+            self.max_frequency = self.max_frequency.get()
+            self.max_frequency = int(self.max_frequency)
+            self.min_amplitude = self.min_amplitude.get()
+            self.min_amplitude = int(self.min_amplitude)
+            self.max_amplitude = self.max_amplitude.get()
+            self.max_amplitude = int(self.max_amplitude)
+            self.num_bands = self.num_bands.get()
+            self.num_bands = int(self.num_bands)
+            self.visible_bands = self.visible_bands.get()
+            self.visible_bands = self.visible_bands.split(',')
+            self.visible_bands = list(map(int,self.visible_bands))
+            self.transmit_strength = self.transmit_strength.get()
+            self.transmit_strength = int(self.transmit_strength)
+        except Exception as e:
+            print(e)
+        
+        # Close the initial options window after entry
+        self.init_options.destroy()
+                
 
     def create_options_window(self):
         """
@@ -226,7 +322,7 @@ class SpectrumAnalyzer:
         self.label.configure(text=f'Selected Band\nFrequency: {self.frequencies[self.selected_band]} Hz\nAmplitude: {self.amplitudes[self.selected_band]}')
 
         # Update the color of the bar based on the amplitude
-        if amplitude >= 500:
+        if amplitude >= self.transmit_strength:
             self.bar_plot[self.selected_band].set_color('green')
             self.bar_plot[self.selected_band].set_zorder(100)
         else:
