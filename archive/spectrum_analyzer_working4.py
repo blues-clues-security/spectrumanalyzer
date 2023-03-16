@@ -4,7 +4,6 @@ import matplotlib.animation as animation
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import random
-import tkinter.ttk as ttk
 
 class SpectrumAnalyzer:
     """
@@ -68,9 +67,7 @@ class SpectrumAnalyzer:
         the list of frequencies to be plotted, the selected band, and the animation.
         """
         self.create_initial_options_windows()
-        #self.amplitudes = self.noise_floor * (self.num_bands + len(self.visible_bands))
-        #self.amplitudes = [self.noise_floor[0]] * (self.num_bands + len(self.visible_bands)) #chatgpt made
-        self.amplitudes = [self.noise_floor[0]] * (self.num_bands) #chatgpt made
+        self.amplitudes = self.noise_floor * (self.num_bands + len(self.visible_bands))
         self.create_options_window()
         self.create_control_frame()
         self.create_bar_plot_frame()
@@ -182,10 +179,7 @@ class SpectrumAnalyzer:
             self.visible_bands = self.visible_bands.split(',')
             self.visible_bands = list(map(int,self.visible_bands))
             self.transmit_strength = self.transmit_strength.get()
-            if self.transmit_strength:
-                self.transmit_strength = int(self.transmit_strength)
-            else:
-                pass
+            self.transmit_strength = int(self.transmit_strength)
         except Exception as e:
             print(e)
         
@@ -209,19 +203,12 @@ class SpectrumAnalyzer:
         self.plot_frame = tk.Frame(self.root)
         self.plot_frame.winfo_toplevel().title('Spectrum Analyzer')
         self.plot_frame.pack()
-        base_frequencies = np.linspace(self.min_frequency, self.max_frequency, self.num_bands - len(self.visible_bands), endpoint=False)
-
-        # Create a list of visible bands with closest frequencies in base_frequencies
-        visible_band_indices = []
-        for visible_band in self.visible_bands:
-            closest_index = np.argmin(np.abs(base_frequencies - visible_band))
-            visible_band_indices.append(closest_index)
-
-        # Insert visible bands into the base_frequencies array
-        for i, index in enumerate(visible_band_indices):
-            base_frequencies = np.insert(base_frequencies, index + i, self.visible_bands[i])
-
-        self.frequencies = base_frequencies
+        self.frequencies = np.arange(self.min_frequency, self.max_frequency, (self.max_frequency - self.min_frequency) // (self.num_bands))
+        try:
+            for i in self.visible_bands:
+                i // 10
+        except:
+            print('One of the visible bands may show incorrectly')
         
         # Remove the borders from the Spectrum Analyzer frame
         self.fig, self.ax = plt.subplots()
@@ -229,8 +216,6 @@ class SpectrumAnalyzer:
         self.ax.spines['right'].set_visible(False)
         self.ax.spines['bottom'].set_visible(False)
         self.ax.spines['left'].set_visible(False)
-        self.fig.set_figheight(20)
-        self.fig.set_figwidth(20)
         
         # Create the bar plot
         self.bar_plot = self.ax.bar(self.frequencies, self.noise_floor * (self.num_bands), color='red', width=[5] * (self.num_bands))
@@ -248,7 +233,6 @@ class SpectrumAnalyzer:
         self.ax.set_xticks(self.visible_bands)
         
         # Create the FigureCanvasTkAgg widget and add it to the plot frame
-        print(np.where(self.frequencies == self.visible_bands[0])[0])
         self.selected_band = np.where(self.frequencies == self.visible_bands[0])[0][0]
         self.canvas = FigureCanvasTkAgg(self.fig, self.plot_frame)
         self.canvas.get_tk_widget().pack()
@@ -296,15 +280,15 @@ class SpectrumAnalyzer:
             The current frame of the animation.
         """
         num_bars_to_wiggle = int(len(self.bar_plot) * 0.1)  # Determine number of bars to wiggle
-        bars_to_wiggle = np.random.choice(len(self.bar_plot), num_bars_to_wiggle, replace=False)  # Select random bars to wiggle
-        wiggle_amount = 10 * np.sin(frame / 100 * 2 * np.pi) # Calculate a sine wave with period 100 frames and amplitude 10 pixels        
+        bars_to_wiggle = random.sample(range(len(self.bar_plot)), num_bars_to_wiggle)  # Select random bars to wiggle
         for i, rect in enumerate(self.bar_plot):
-            if i in bars_to_wiggle:
-                rect.set_height(max(0, int(self.amplitudes[i] + int(wiggle_amount))))
-            else:
-                rect.set_height(max(0, int(self.amplitudes[i])))
-
-
+            try:
+                if i in bars_to_wiggle:
+                    # Calculate a sine wave with period 100 frames and amplitude 10 pixels
+                    wiggle_amount = 10 * np.sin(frame / 100 * 2 * np.pi)
+                    rect.set_height(int(self.amplitudes[i] + int(wiggle_amount)))
+            except IndexError:
+                rect.set_height(int(self.amplitudes[i]) - 10)
     
     def update(self, frame):
         """
@@ -315,9 +299,12 @@ class SpectrumAnalyzer:
         frame : int
             the current frame of the animation
         """
-        heights = np.maximum(0, self.amplitudes)
-        for rect, h in zip(self.bar_plot, heights):
-            rect.set_height(h)
+        for i, rect in enumerate(self.bar_plot):
+            try:
+                rect.set_height(int(self.amplitudes[i]))
+            except IndexError:
+                print(i)
+                pass
         self.wiggle(frame)
         self.update_label()
         return self.bar_plot,
@@ -335,20 +322,12 @@ class SpectrumAnalyzer:
         self.label.configure(text=f'Selected Band\nFrequency: {self.frequencies[self.selected_band]} Hz\nAmplitude: {self.amplitudes[self.selected_band]}')
 
         # Update the color of the bar based on the amplitude
-        try: 
-            if amplitude >= self.transmit_strength:
-                self.bar_plot[self.selected_band].set_color('green')
-                self.bar_plot[self.selected_band].set_zorder(100)
-            else:
-                self.bar_plot[self.selected_band].set_color('red')
-        except TypeError:
-            self.transmit_strength = 500
-            if amplitude >= self.transmit_strength:
-                self.bar_plot[self.selected_band].set_color('green')
-                self.bar_plot[self.selected_band].set_zorder(100)
-            else:
-                self.bar_plot[self.selected_band].set_color('red')
-            
+        if amplitude >= self.transmit_strength:
+            self.bar_plot[self.selected_band].set_color('green')
+            self.bar_plot[self.selected_band].set_zorder(100)
+        else:
+            self.bar_plot[self.selected_band].set_color('red')
+
         # Update the amplitudes of the adjacent bars
         band_list = range(1,5)
         band_variance = [0.9, 0.95, 0.9, 0.8, 0.6]
@@ -360,12 +339,13 @@ class SpectrumAnalyzer:
                         self.amplitudes[band] = self.amplitudes[self.selected_band] * band_variance[i]
                 if self.amplitudes[self.selected_band] <= self.noise_floor[0]:
                     self.amplitudes[band] = self.noise_floor[0]
+        self.root.after(500, self.update_label)
     
     def create_animation(self):
         """
         Creates the animation using the update function and a frame rate of 60 FPS.
         """
-        self.ani = animation.FuncAnimation(self.fig, self.update, interval=1000/30)
+        self.ani = animation.FuncAnimation(self.fig, self.update, interval=1000/60)
    
 # Start the main loop
 SpectrumAnalyzer().root.mainloop()

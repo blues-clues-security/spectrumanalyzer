@@ -3991,6 +3991,7 @@
   ('tkinter.simpledialog',
    'C:\\Python310\\lib\\tkinter\\simpledialog.py',
    'PYMODULE'),
+  ('tkinter.ttk', 'C:\\Python310\\lib\\tkinter\\ttk.py', 'PYMODULE'),
   ('tornado',
    'C:\\Users\\tcbla\\AppData\\Roaming\\Python\\Python310\\site-packages\\tornado\\__init__.py',
    'PYMODULE'),
