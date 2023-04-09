@@ -4,7 +4,9 @@ import matplotlib.animation as animation
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import random
-import tkinter.ttk as ttk
+from matplotlib.animation import PillowWriter, FuncAnimation
+import matplotlib.animation as animation
+#import tkinter.ttk as ttk
 
 class SpectrumAnalyzer:
     """
@@ -60,22 +62,69 @@ class SpectrumAnalyzer:
     create_animation():
         Creates the animation using the update function and a frame rate of 60 FPS.
     """
-    def __init__(self):
+    def __init__(self, min_frequency=0, max_frequency=1000, min_amplitude=0, max_amplitude=1000, num_bands=100, visible_bands=[200, 400, 550, 800], noise_floor=[200], num_frames=100):
         """
         Constructs all the necessary attributes for the SpectrumAnalyzer object.
 
         Initializes the window for the options, the frame for the spectrum analyzer plot,
         the list of frequencies to be plotted, the selected band, and the animation.
         """
-        self.create_initial_options_windows()
-        #self.amplitudes = self.noise_floor * (self.num_bands + len(self.visible_bands))
-        #self.amplitudes = [self.noise_floor[0]] * (self.num_bands + len(self.visible_bands)) #chatgpt made
-        self.amplitudes = [self.noise_floor[0]] * (self.num_bands) #chatgpt made
-        self.create_options_window()
-        self.create_control_frame()
-        self.create_bar_plot_frame()
-        self.create_animation()
-        self.update_label()
+        self.min_frequency = min_frequency
+        self.max_frequency = max_frequency
+        self.min_amplitude = min_amplitude
+        self.max_amplitude = max_amplitude
+        self.num_bands = num_bands
+        self.visible_bands = visible_bands
+        self.noise_floor = noise_floor
+        self.amplitudes = [self.noise_floor[0]] * (self.num_bands)
+        self.num_frames = num_frames
+        self.create_bar_plot()
+
+    def create_bar_plot(self):
+        base_frequencies = np.linspace(self.min_frequency, self.max_frequency, self.num_bands - len(self.visible_bands), endpoint=False)
+
+        visible_band_indices = []
+        for visible_band in self.visible_bands:
+            closest_index = np.argmin(np.abs(base_frequencies - visible_band))
+            visible_band_indices.append(closest_index)
+
+        for i, index in enumerate(visible_band_indices):
+            base_frequencies = np.insert(base_frequencies, index + i, self.visible_bands[i])
+
+        self.frequencies = base_frequencies
+
+        self.fig, self.ax = plt.subplots()
+        # self.ax.spines['top'].set_visible(False)
+        # self.ax.spines['right'].set_visible(False)
+        # self.ax.spines['bottom'].set_visible(False)
+        # self.ax.spines['left'].set_visible(False)
+        # self.fig.set_figheight(20)
+        # self.fig.set_figwidth(20)
+
+        self.bar_plot = self.ax.bar(self.frequencies, self.noise_floor * (self.num_bands), color='red', width=[5] * (self.num_bands))
+
+        plt.ylim((0,1000))
+        plt.xlim((self.min_frequency-100, self.max_frequency+100))
+
+        self.ax.set_title('Spectrum Analyzer')
+        self.ax.set_xlabel('Frequency (Hz)')
+        self.ax.set_ylabel('Amplitude')
+
+        self.ax.set_xticks(self.visible_bands)
+
+    def update_bars(self, i):
+        new_amplitudes = [random.randint(self.min_amplitude, self.max_amplitude) for _ in range(self.num_bands)]
+
+        for bar, amplitude in zip(self.bar_plot, new_amplitudes):
+            bar.set_height(amplitude)
+
+        #return self.bar_plot
+        return self.frequencies, new_amplitudes
+
+    # def save_animation(self, filename, num_frames=100, interval=100):
+    #     ani = animation.FuncAnimation(self.fig, self.update_bars, frames=num_frames, interval=interval, blit=True)
+    #     ani.save(filename, writer='imagemagick', fps=30)
+    
 
     def select_band(self, selected_band):
         """
@@ -88,79 +137,6 @@ class SpectrumAnalyzer:
         """
         self.selected_band = np.where(self.frequencies == selected_band)[0][0]
     
-    def create_initial_options_windows(self):
-        """
-        Creates the initial options window for the Spectrum Analyzer.
-        """
-        # Create initial options window
-        self.init_options = tk.Tk()
-        self.init_options.geometry('520x400')
-        self.init_options.winfo_toplevel().title('Initial Options')
-
-         # Create two frames to hold the options
-        left_frame = tk.Frame(self.init_options)
-        right_frame = tk.Frame(self.init_options)
-        left_frame.pack(side=tk.LEFT, padx=10)
-        right_frame.pack(side=tk.LEFT, padx=20)
-        
-        # Set starting variables to entry fields
-        self.min_frequency = tk.Entry(left_frame)
-        self.min_frequency.insert(0, '0')
-        self.minfreq_label = tk.Label(left_frame, text="Enter minimum frequency\n(Default: 0)")
-        self.max_frequency = tk.Entry(left_frame)
-        self.max_frequency.insert(0, '1000')
-        self.maxfreq_label = tk.Label(left_frame, text="Enter maximum frequency\n(Default: 1000)")
-        self.min_amplitude = tk.Entry(left_frame)
-        self.min_amplitude.insert(0, '0')
-        self.minamp_label = tk.Label(left_frame, text="Enter minimum amplitude\n(Default: 0)")
-        self.max_amplitude = tk.Entry(left_frame)
-        self.max_amplitude.insert(0, '1000')
-        self.maxamp_label = tk.Label(left_frame, text="Enter maximum amplitude\n(Default: 1000)")
-        self.num_bands = tk.Entry(right_frame)
-        self.num_bands.insert(0, '100')
-        self.numbands_label = tk.Label(right_frame, text="Enter number of bars to display\n(For best results: 100)")
-        self.visible_bands = tk.Entry(right_frame)
-        self.visible_bands.insert(0, '200,400,550,800')
-        self.visbands_label = tk.Label(right_frame, text="Enter the monitor frequencies\n(Example: 200,400,550,800)")
-        self.noise_floor = tk.Entry(right_frame)
-        self.noise_floor.insert(0, '200')
-        self.noisefloor_label = tk.Label(right_frame, text="Enter the amplitude of the noise floor")
-        self.transmit_strength = tk.Entry(right_frame)
-        self.transtr_label = tk.Label(right_frame, text="Enter the transmit signal strength\n(when the bar should turn green)")
-        
-        # Build lists to display all buttons
-        self.init_optionslabels = [
-            self.minfreq_label,
-            self.maxfreq_label,
-            self.minamp_label,
-            self.maxamp_label,
-            self.numbands_label,
-            self.visbands_label,
-            self.noisefloor_label,
-            self.transtr_label
-        ]
-        self.init_optionsbuttons = [
-            self.min_frequency,
-            self.max_frequency,
-            self.min_amplitude,
-            self.max_amplitude,
-            self.num_bands,
-            self.visible_bands,
-            self.noise_floor,
-            self.transmit_strength
-        ]
-        # Display the created entry buttons on the initial options window
-        for i, button in enumerate(self.init_optionsbuttons):
-            self.init_optionslabels[i].pack()
-            self.init_optionsbuttons[i].pack(side=tk.TOP, pady=5)
-
-        # Create the submit button, focus the window and wait until the submit button has been pressed to continue execution
-        self.submit_button = tk.Button(self.init_options, text="Submit", command=self.submit_init_options)
-        self.submit_button.pack(side="right", pady=20, padx=25)
-        self.init_options.grab_set()
-        self.init_options.focus_set()
-        self.init_options.wait_window()
-
     def submit_init_options(self):
         """
         Gets the input values from the initial options window and saves them as instance variables.
@@ -192,15 +168,6 @@ class SpectrumAnalyzer:
         # Close the initial options window after entry
         self.init_options.destroy()
                 
-
-    def create_options_window(self):
-        """
-        Creates the options window.
-        """
-        self.options = tk.Tk()
-        self.options.geometry('300x250')
-        self.options.winfo_toplevel().title('Options')
-
     def create_bar_plot_frame(self):
         """
         Creates the frame for the spectrum analyzer plot.
@@ -252,26 +219,7 @@ class SpectrumAnalyzer:
         self.selected_band = np.where(self.frequencies == self.visible_bands[0])[0][0]
         self.canvas = FigureCanvasTkAgg(self.fig, self.plot_frame)
         self.canvas.get_tk_widget().pack()
-
-    def create_control_frame(self):
-        """
-        Creates the frame for the control buttons and sliders.
-        """
-        self.control_frame = tk.Frame(self.options)
-        self.control_frame.pack()
-        band_buttons = []
-        for i, visible_band in enumerate(self.visible_bands):
-            band_button = tk.Button(self.control_frame, text=f'Select Band {i+1}', command=lambda visible_band=visible_band: self.select_band(visible_band))
-            band_buttons.append(band_button)
-        for band_button in band_buttons:
-            band_button.pack()
-        self.amplitude_slider = tk.Scale(self.control_frame, from_=0, to=1000, orient=tk.HORIZONTAL, resolution=1, command=self.set_amplitude)
-        self.amplitude_text = tk.Entry(self.control_frame)
-        self.amplitude_slider.pack()
-        self.amplitude_text.pack()
-        self.label = tk.Label(self.options)
-        self.label.pack()
-    
+  
     def set_amplitude(self, amplitude):
         """
         Sets the amplitude of the currently selected band.
@@ -304,8 +252,6 @@ class SpectrumAnalyzer:
             else:
                 rect.set_height(max(0, int(self.amplitudes[i])))
 
-
-    
     def update(self, frame):
         """
         Updates the amplitude of each bar in the plot.
@@ -366,6 +312,32 @@ class SpectrumAnalyzer:
         Creates the animation using the update function and a frame rate of 60 FPS.
         """
         self.ani = animation.FuncAnimation(self.fig, self.update, interval=1000/30)
-   
-# Start the main loop
-SpectrumAnalyzer().root.mainloop()
+
+    def save_spectrum_gif(self, file_name='spectrum.gif', dpi=80):
+        fig, ax = plt.subplots()
+    
+        def update_spectrum_plot(frame):
+            freqs, amplitudes = self.update_bars(frame)
+            ax.clear()
+            ax.bar(freqs, amplitudes)
+            ax.set_xlabel("Frequency [Hz]")
+            ax.set_ylabel("Amplitude")
+            ax.set_title("Frequency Spectrum")
+
+        ani = FuncAnimation(fig, update_spectrum_plot, frames=self.num_frames, interval=50, blit=False)
+
+        writer = PillowWriter(fps=20)
+        ani.save(file_name, writer=writer, dpi=dpi)
+
+        plt.close(fig)
+
+if __name__ == '__main__':
+    # Example usage
+    #analyzer = SpectrumAnalyzer()
+    #analyzer.save_animation('images/spectrum_analyzer_animation.gif', num_frames=100, interval=100)
+    #analyzer.save_spectrum_gif()
+    sa = SpectrumAnalyzer(num_frames=50)
+    sa.save_spectrum_gif(file_name='static/spectrum.gif', dpi=80)
+
+    # Start the main loop
+    #SpectrumAnalyzer().root.mainloop()

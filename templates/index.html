@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spectrum Analyzer</title>
+</head>
+<body>
+    <h1>Spectrum Analyzer</h1>
+    <div id="analyzer">
+        <img src="{{ url_for('static', filename='spectrum_analyzer_animation.gif') }}" alt="Spectrum Analyzer Animation" width="1820" height="980">
+        <img src="{{ url_for('static', filename='spectrum.gif') }}" alt="Spectrum Analyzer Animation" width="1820" height="980">
+        <!-- Spectrum analyzer image will be loaded here -->
+    </div>
+
+    <form id="options-form">
+        <!-- Add form elements for the options here -->
+    </form>
+
+    <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $('#options-form').submit(function(event) {
+            event.preventDefault();
+
+            var optionsData = {
+                // Collect the options data from the form here
+            };
+
+            $.ajax({
+                type: 'POST',
+                url: '/options',
+                contentType: 'application/json;charset=UTF-8',
+                data: JSON.stringify(optionsData),
+                success: function(response) {
+                    $('#analyzer').html('<img src="data:image/png;base64,' + response.image + '">');
+                }
+            });
+        });
+    </script> -->
+</body>
+</html>
